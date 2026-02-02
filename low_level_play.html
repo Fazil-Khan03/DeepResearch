@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mastering Low-Level Design: An Interactive Framework</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #fdfaf6; color: #1f2937; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        /* Chart Container Styling - Mandatory */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+
+        /* UML Class Card Styling */
+        .uml-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .uml-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .uml-header {
+            background: #f3f4f6;
+            padding: 8px;
+            text-align: center;
+            font-weight: 700;
+            border-bottom: 1px solid #e5e7eb;
+            border-radius: 6px 6px 0 0;
+        }
+        .uml-body {
+            padding: 10px;
+            font-size: 0.85rem;
+            color: #4b5563;
+        }
+
+        /* Navigation Active State */
+        .nav-item.active {
+            background-color: #e0e7ff;
+            color: #4338ca;
+            border-left: 4px solid #4338ca;
+        }
+
+        /* Interactive Elements */
+        .choice-chip {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .choice-chip:hover {
+            background-color: #f3f4f6;
+        }
+        .choice-chip.selected {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+            color: #1e40af;
+        }
+
+        /* Fade Animation */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals & Corporate Blue -->
+    <!-- Application Structure Plan: The app uses a "Guided Workshop" model. The sidebar provides navigation through the 5 phases of LLD. The main area is split: Top for Context/Theory, Bottom for Interactive Application (Parking Lot Case Study). This mirrors the actual interview process: Theory -> Application. -->
+    <!-- Visualization & Content Choices: 
+         1. Time Allocation Pie Chart -> Goal: Inform user of interview pacing -> Chart.js.
+         2. Interactive UML Builder -> Goal: Teach class relationships -> CSS Grid/Flexbox (No SVG).
+         3. Requirements Reveal Game -> Goal: Teach active listening -> JS Event Listeners.
+         4. Pattern Toggle -> Goal: Show code impact of patterns -> Dynamic HTML content replacement.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 flex flex-col justify-between hidden md:flex">
+        <div>
+            <div class="p-6 border-b border-gray-100">
+                <h1 class="text-xl font-bold text-indigo-700">LLD Architect</h1>
+                <p class="text-xs text-gray-500 mt-1">Interactive Framework Guide</p>
+            </div>
+            <nav class="mt-6 space-y-1 px-2">
+                <a href="#" class="nav-item active flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-r-lg transition-colors" onclick="loadSection('intro')">
+                    <span class="mr-3">👋</span> Introduction
+                </a>
+                <a href="#" class="nav-item flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-r-lg transition-colors" onclick="loadSection('step1')">
+                    <span class="mr-3">1️⃣</span> 1. Requirements
+                </a>
+                <a href="#" class="nav-item flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-r-lg transition-colors" onclick="loadSection('step2')">
+                    <span class="mr-3">2️⃣</span> 2. Entities & Schema
+                </a>
+                <a href="#" class="nav-item flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-r-lg transition-colors" onclick="loadSection('step3')">
+                    <span class="mr-3">3️⃣</span> 3. Relationships
+                </a>
+                <a href="#" class="nav-item flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-r-lg transition-colors" onclick="loadSection('step4')">
+                    <span class="mr-3">4️⃣</span> 4. Design Patterns
+                </a>
+                <a href="#" class="nav-item flex items-center px-4 py-3 text-sm font-medium text-gray-700 rounded-r-lg transition-colors" onclick="loadSection('review')">
+                    <span class="mr-3">🎓</span> Review & Quiz
+                </a>
+            </nav>
+        </div>
+        <div class="p-4 bg-gray-50 m-4 rounded-lg border border-gray-200">
+            <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Current Case Study</h4>
+            <div class="mt-2 flex items-center">
+                <span class="text-2xl mr-2">🚗</span>
+                <div>
+                    <p class="text-sm font-bold text-gray-800">Automated Parking Lot</p>
+                    <p class="text-xs text-gray-500">Difficulty: Beginner</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto bg-stone-50 relative">
+        <!-- Mobile Header -->
+        <div class="md:hidden bg-white p-4 border-b border-gray-200 flex justify-between items-center sticky top-0 z-10">
+            <h1 class="font-bold text-indigo-700">LLD Architect</h1>
+            <button id="menuBtn" class="text-gray-500 hover:text-gray-700">Menu</button>
+        </div>
+
+        <!-- Dynamic Content Container -->
+        <div id="content-area" class="max-w-5xl mx-auto p-6 md:p-10 space-y-8">
+            <!-- Content Injected via JS -->
+        </div>
+        
+        <!-- Footer -->
+        <footer class="max-w-5xl mx-auto p-6 text-center text-xs text-gray-400">
+            <p>Generated Interactive Guide • Low Level Design Framework</p>
+        </footer>
+    </main>
+
+    <script>
+        // State Management
+        const state = {
+            currentSection: 'intro',
+            requirementsCollected: [],
+            selectedEntities: [],
+            appliedPatterns: new Set(),
+            quizScore: 0
+        };
+
+        // Data Store
+        const contentData = {
+            intro: {
+                title: "The LLD Mindset",
+                description: "Low Level Design (LLD) is about turning abstract requirements into concrete, maintainable code structures. It's the bridge between a system's architecture and the actual lines of code.",
+                chartLabel: "Interview Time Allocation (45 min)",
+                chartData: [10, 30, 40, 20], // Requirements, Diagrams, Code, Review
+                chartLabels: ["Requirements (5m)", "Diagrams/Schema (15m)", "Coding/Patterns (20m)", "Review (5m)"]
+            },
+            requirements: {
+                hidden: [
+                    { id: 1, q: "What types of vehicles?", a: "Cars, Trucks, and Motorcycles.", type: "Functional" },
+                    { id: 2, q: "Pricing model?", a: "Hourly rate, different for each vehicle type.", type: "Functional" },
+                    { id: 3, q: "Multiple floors?", a: "Yes, scalable to N floors.", type: "Non-Functional" },
+                    { id: 4, q: "Payment methods?", a: "Credit Card and Cash at exit.", type: "Functional" },
+                    { id: 5, q: "Concurrency?", a: "High traffic, handle race conditions for spots.", type: "Non-Functional" }
+                ]
+            },
+            entities: [
+                { name: "ParkingLot", type: "Core", correct: true },
+                { name: "Vehicle", type: "Core", correct: true },
+                { name: "ParkingSpot", type: "Core", correct: true },
+                { name: "Ticket", type: "Core", correct: true },
+                { name: "Database", type: "Infra", correct: false },
+                { name: "PaymentStrategy", type: "Pattern", correct: true },
+                { name: "UserInterface", type: "UI", correct: false },
+                { name: "Gate", type: "Core", correct: true }
+            ]
+        };
+
+        // --- View Rendering Logic ---
+
+        function renderIntro() {
+            return `
+                <div class="fade-in space-y-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-4">Mastering the LLD Interview</h2>
+                        <p class="text-lg text-gray-600 mb-6">
+                            Most candidates fail LLD not because they can't code, but because they jump into coding too fast. 
+                            A structured approach is your best weapon. We will use the <strong>"5-Step Framework"</strong>.
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                            <div class="space-y-4">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 h-8 w-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">1</div>
+                                    <div class="ml-4"><h3 class="font-semibold">Clarify Requirements</h3><p class="text-sm text-gray-500">Define scope and constraints first.</p></div>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 h-8 w-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">2</div>
+                                    <div class="ml-4"><h3 class="font-semibold">Define Entities</h3><p class="text-sm text-gray-500">Identify the "Nouns" of the system.</p></div>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 h-8 w-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">3</div>
+                                    <div class="ml-4"><h3 class="font-semibold">Relationships & Diagram</h3><p class="text-sm text-gray-500">Composition, Inheritance, Association.</p></div>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 h-8 w-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">4</div>
+                                    <div class="ml-4"><h3 class="font-semibold">Code & Patterns</h3><p class="text-sm text-gray-500">Apply Strategy, Factory, Observer.</p></div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-6 border border-gray-100">
+                                <h4 class="text-sm font-semibold text-center mb-4 text-gray-500 uppercase">Ideal Time Management</h4>
+                                <div class="chart-container">
+                                    <canvas id="timeChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end">
+                        <button onclick="loadSection('step1')" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-medium transition shadow-lg">Start the Framework →</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStep1() {
+            return `
+                <div class="fade-in space-y-6">
+                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4">
+                        <p class="text-indigo-700 font-medium">Step 1: Clarify Requirements</p>
+                        <p class="text-sm text-indigo-600 mt-1">Never assume. Ask questions to define the "Contract" of your system. Click the questions below to simulate asking the interviewer.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Questions Panel -->
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                            <h3 class="font-bold text-gray-800 mb-4">❓ Ask the Interviewer</h3>
+                            <div class="space-y-3" id="questions-list">
+                                ${contentData.requirements.hidden.map(item => `
+                                    <div onclick="revealAnswer(${item.id})" id="q-card-${item.id}" class="choice-chip border border-gray-200 rounded-lg p-3 group">
+                                        <div class="flex justify-between items-center">
+                                            <span class="font-medium text-gray-700">${item.q}</span>
+                                            <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded group-hover:bg-white">${item.type}</span>
+                                        </div>
+                                        <div id="ans-${item.id}" class="hidden mt-2 text-sm text-green-700 bg-green-50 p-2 rounded">
+                                            ${item.a}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Collected Requirements Note -->
+                        <div class="bg-stone-100 p-6 rounded-xl border border-stone-200 relative">
+                            <div class="absolute -top-3 left-4 bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full border border-yellow-200">NOTEBOOK</div>
+                            <h3 class="font-bold text-gray-800 mb-4 mt-2">📝 Confirmed Requirements</h3>
+                            <ul id="req-notebook" class="list-disc pl-5 space-y-2 text-sm text-gray-600">
+                                <li class="italic text-gray-400">Ask questions to fill this notebook...</li>
+                            </ul>
+                        </div>
+                    </div>
+                     <div class="flex justify-between">
+                        <button onclick="loadSection('intro')" class="text-gray-500 hover:text-gray-900">← Back</button>
+                        <button onclick="loadSection('step2')" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-medium transition shadow-sm">Next: Define Entities →</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStep2() {
+            return `
+                <div class="fade-in space-y-6">
+                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4">
+                        <p class="text-indigo-700 font-medium">Step 2: Define Core Entities</p>
+                        <p class="text-sm text-indigo-600 mt-1">Identify the "Nouns" in your requirements. Avoid implementation details like "Database" or "UI" at this stage.</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <h3 class="font-bold text-gray-800 mb-4">Select the Correct Entities for a Parking Lot</h3>
+                        <div class="flex flex-wrap gap-3">
+                            ${contentData.entities.map(ent => `
+                                <button onclick="toggleEntity(this, '${ent.name}', ${ent.correct})" 
+                                    class="entity-btn px-4 py-2 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors font-medium text-sm">
+                                    ${ent.name}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <div id="entity-feedback" class="mt-4 text-sm font-medium h-6"></div>
+                    </div>
+
+                    <!-- DB Schema Preview -->
+                    <div class="bg-slate-800 text-slate-200 p-6 rounded-xl shadow-md font-mono text-sm overflow-x-auto">
+                        <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+                            <span class="text-yellow-400 font-bold">📂 Database Schema Preview (SQL)</span>
+                            <span class="text-xs text-slate-400">Based on selected entities</span>
+                        </div>
+                        <div id="schema-preview" class="space-y-4">
+                            <div class="opacity-50 italic">Select entities above to generate schema...</div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <button onclick="loadSection('step1')" class="text-gray-500 hover:text-gray-900">← Back</button>
+                        <button onclick="loadSection('step3')" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-medium transition shadow-sm">Next: Relationships →</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStep3() {
+            return `
+                <div class="fade-in space-y-6">
+                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4">
+                        <p class="text-indigo-700 font-medium">Step 3: Class Relationships</p>
+                        <p class="text-sm text-indigo-600 mt-1">Determine how entities interact. Is it Inheritance (Is-A), Composition (Has-A), or Association (Uses-A)?</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Controls -->
+                        <div class="lg:col-span-1 space-y-4">
+                            <div class="bg-white p-5 rounded-lg border border-gray-200">
+                                <h4 class="font-bold text-gray-800 mb-2">Key Concepts</h4>
+                                <ul class="space-y-3 text-sm">
+                                    <li class="p-2 bg-blue-50 text-blue-800 rounded"><strong>Composition:</strong> Strong ownership. (e.g., Parking Lot has Floors. If Lot is destroyed, Floors are gone).</li>
+                                    <li class="p-2 bg-green-50 text-green-800 rounded"><strong>Aggregation:</strong> Weak ownership. (e.g., Spot has a Vehicle. If Spot closes, Vehicle moves).</li>
+                                    <li class="p-2 bg-purple-50 text-purple-800 rounded"><strong>Inheritance:</strong> Specificity. (e.g., Car is a Vehicle).</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Diagram Visualizer -->
+                        <div class="lg:col-span-2 bg-gray-100 p-6 rounded-xl border border-gray-200 overflow-hidden min-h-[400px] flex items-center justify-center relative">
+                            <div class="absolute top-2 right-2 text-xs text-gray-400 font-mono">Simulated UML View</div>
+                            
+                            <!-- UML Structure Grid -->
+                            <div class="grid grid-cols-3 gap-8 w-full max-w-2xl">
+                                <!-- Top Level -->
+                                <div class="col-span-3 flex justify-center">
+                                    <div class="uml-card w-48">
+                                        <div class="uml-header bg-indigo-100 text-indigo-800">ParkingLot</div>
+                                        <div class="uml-body">
+                                            + address: Address<br>
+                                            + floors: List&lt;Floor&gt;
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Middle Level -->
+                                <div class="col-span-3 flex justify-center py-4">
+                                    <div class="h-8 w-0.5 bg-gray-400"></div>
+                                </div>
+                                <div class="col-span-3 flex justify-center relative">
+                                    <div class="absolute -top-4 bg-white px-2 text-xs text-gray-500">Composition (1:N)</div>
+                                    <div class="uml-card w-48">
+                                        <div class="uml-header">ParkingFloor</div>
+                                        <div class="uml-body">
+                                            + floorId: int<br>
+                                            + spots: List&lt;Spot&gt;<br>
+                                            + displayBoard: Board
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Bottom Level -->
+                                <div class="col-span-3 flex justify-center py-4">
+                                    <div class="h-8 w-0.5 bg-gray-400"></div>
+                                </div>
+
+                                <div class="col-span-1 flex justify-center">
+                                    <div class="uml-card w-32 opacity-75">
+                                        <div class="uml-header text-sm">HandicapSpot</div>
+                                        <div class="uml-body text-xs">Is-A Spot</div>
+                                    </div>
+                                </div>
+                                <div class="col-span-1 flex justify-center">
+                                    <div class="uml-card w-32 border-blue-500 shadow-md transform scale-105">
+                                        <div class="uml-header bg-blue-50 text-blue-900 text-sm">ParkingSpot</div>
+                                        <div class="uml-body text-xs">
+                                            + id: int<br>
+                                            + isFree: bool<br>
+                                            + vehicle: Vehicle
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-span-1 flex justify-center">
+                                    <div class="uml-card w-32 opacity-75">
+                                        <div class="uml-header text-sm">LargeSpot</div>
+                                        <div class="uml-body text-xs">Is-A Spot</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="flex justify-between">
+                        <button onclick="loadSection('step2')" class="text-gray-500 hover:text-gray-900">← Back</button>
+                        <button onclick="loadSection('step4')" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-medium transition shadow-sm">Next: Design Patterns →</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStep4() {
+            return `
+                <div class="fade-in space-y-6">
+                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4">
+                        <p class="text-indigo-700 font-medium">Step 4: Design Patterns & Extensibility</p>
+                        <p class="text-sm text-indigo-600 mt-1">Don't just write code. Write *maintainable* code using Design Patterns. See how they transform the solution.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Pattern Selection -->
+                        <div class="space-y-4">
+                            <h3 class="font-bold text-gray-800">Select a Pattern to Apply:</h3>
+                            
+                            <div onclick="applyPattern('none')" class="pattern-card cursor-pointer p-4 rounded-lg border border-gray-200 hover:border-indigo-400 transition bg-white shadow-sm">
+                                <h4 class="font-bold text-red-500">No Pattern (Naive)</h4>
+                                <p class="text-xs text-gray-500 mt-1">Huge if-else blocks. Hard to maintain.</p>
+                            </div>
+
+                            <div onclick="applyPattern('factory')" class="pattern-card cursor-pointer p-4 rounded-lg border border-gray-200 hover:border-indigo-400 transition bg-white shadow-sm">
+                                <h4 class="font-bold text-indigo-600">Factory Pattern</h4>
+                                <p class="text-xs text-gray-500 mt-1">For creating objects (Vehicles/Spots) without specifying exact classes.</p>
+                            </div>
+
+                            <div onclick="applyPattern('strategy')" class="pattern-card cursor-pointer p-4 rounded-lg border border-gray-200 hover:border-indigo-400 transition bg-white shadow-sm">
+                                <h4 class="font-bold text-green-600">Strategy Pattern</h4>
+                                <p class="text-xs text-gray-500 mt-1">For interchangeable algorithms (Pricing Logic: Hourly vs Daily vs Weekend).</p>
+                            </div>
+
+                             <div onclick="applyPattern('singleton')" class="pattern-card cursor-pointer p-4 rounded-lg border border-gray-200 hover:border-indigo-400 transition bg-white shadow-sm">
+                                <h4 class="font-bold text-purple-600">Singleton Pattern</h4>
+                                <p class="text-xs text-gray-500 mt-1">Ensuring only one instance of ParkingLot exists.</p>
+                            </div>
+                        </div>
+
+                        <!-- Code Preview -->
+                        <div class="bg-[#1e1e1e] rounded-xl overflow-hidden shadow-lg flex flex-col h-[500px]">
+                            <div class="bg-[#2d2d2d] px-4 py-2 flex items-center space-x-2 border-b border-[#3e3e3e]">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                <span class="text-xs text-gray-400 ml-2 font-mono">ParkingSystem.java</span>
+                            </div>
+                            <div class="p-4 overflow-y-auto custom-scrollbar flex-1">
+                                <pre id="code-display" class="font-mono text-sm text-gray-300 leading-relaxed">
+// Select a pattern on the left 
+// to see the code transformation.
+                                </pre>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="flex justify-between">
+                        <button onclick="loadSection('step3')" class="text-gray-500 hover:text-gray-900">← Back</button>
+                        <button onclick="loadSection('review')" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-medium transition shadow-sm">Final Review →</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderReview() {
+            return `
+                <div class="fade-in space-y-6">
+                    <div class="text-center py-8">
+                        <div class="inline-block p-4 rounded-full bg-green-100 text-green-600 mb-4 text-4xl">🏆</div>
+                        <h2 class="text-3xl font-bold text-gray-900">Framework Complete</h2>
+                        <p class="text-gray-600 max-w-2xl mx-auto mt-2">
+                            You've walked through the 5 essential steps of LLD. Remember: Clarify -> Define Entities -> Relationships -> Code with Patterns -> Review.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                            <h3 class="font-bold text-gray-800 mb-4">Quick LLD Checklist</h3>
+                            <ul class="space-y-3">
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <span class="w-5 h-5 mr-3 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs">✓</span>
+                                    Did you handle edge cases (e.g., parking full)?
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <span class="w-5 h-5 mr-3 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs">✓</span>
+                                    Is the code extensible (Open/Closed Principle)?
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <span class="w-5 h-5 mr-3 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs">✓</span>
+                                    Did you discuss concurrency (Synchronized methods)?
+                                </li>
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <span class="w-5 h-5 mr-3 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs">✓</span>
+                                    Are your database relationships normalized?
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-indigo-600 text-white p-6 rounded-xl shadow-md">
+                            <h3 class="font-bold text-xl mb-2">Ready for the next challenge?</h3>
+                            <p class="text-indigo-100 text-sm mb-4">Try applying this same framework to:</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="bg-indigo-700 px-3 py-1 rounded-full text-xs">Movie Booking System</span>
+                                <span class="bg-indigo-700 px-3 py-1 rounded-full text-xs">Elevator System</span>
+                                <span class="bg-indigo-700 px-3 py-1 rounded-full text-xs">Vending Machine</span>
+                            </div>
+                            <button onclick="location.reload()" class="mt-6 w-full bg-white text-indigo-700 font-bold py-2 rounded-lg hover:bg-gray-50 transition">Restart Guide</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- Interaction Logic ---
+
+        function loadSection(sectionId) {
+            const container = document.getElementById('content-area');
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => item.classList.remove('active'));
+            // Simple logic to set active class based on sectionId index
+            const indexMap = { 'intro': 0, 'step1': 1, 'step2': 2, 'step3': 3, 'step4': 4, 'review': 5 };
+            if(navItems[indexMap[sectionId]]) navItems[indexMap[sectionId]].classList.add('active');
+
+            state.currentSection = sectionId;
+
+            // Render content
+            switch(sectionId) {
+                case 'intro': container.innerHTML = renderIntro(); initChart(); break;
+                case 'step1': container.innerHTML = renderStep1(); restoreReqs(); break;
+                case 'step2': container.innerHTML = renderStep2(); restoreEntities(); break;
+                case 'step3': container.innerHTML = renderStep3(); break;
+                case 'step4': container.innerHTML = renderStep4(); applyPattern('none'); break;
+                case 'review': container.innerHTML = renderReview(); break;
+            }
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('timeChart');
+            if(ctx) {
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: contentData.intro.chartLabels,
+                        datasets: [{
+                            data: contentData.intro.chartData,
+                            backgroundColor: ['#fca5a5', '#93c5fd', '#6366f1', '#a5b4fc'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Step 1 Interactions
+        function revealAnswer(id) {
+            const card = document.getElementById(`q-card-${id}`);
+            const ans = document.getElementById(`ans-${id}`);
+            const notebook = document.getElementById('req-notebook');
+            
+            if (ans.classList.contains('hidden')) {
+                ans.classList.remove('hidden');
+                card.classList.add('selected');
+                
+                // Add to notebook if not present
+                const reqText = contentData.requirements.hidden.find(r => r.id === id).a;
+                if (!state.requirementsCollected.includes(id)) {
+                    state.requirementsCollected.push(id);
+                    if(state.requirementsCollected.length === 1) notebook.innerHTML = ''; // clear default text
+                    notebook.innerHTML += `<li class="fade-in">✅ ${reqText}</li>`;
+                }
+            }
+        }
+
+        function restoreReqs() {
+            if (state.requirementsCollected.length > 0) {
+                const notebook = document.getElementById('req-notebook');
+                notebook.innerHTML = '';
+                state.requirementsCollected.forEach(id => {
+                    const reqText = contentData.requirements.hidden.find(r => r.id === id).a;
+                    notebook.innerHTML += `<li>✅ ${reqText}</li>`;
+                    // Mark visual state
+                    const card = document.getElementById(`q-card-${id}`);
+                    const ans = document.getElementById(`ans-${id}`);
+                    if(card && ans) {
+                        card.classList.add('selected');
+                        ans.classList.remove('hidden');
+                    }
+                });
+            }
+        }
+
+        // Step 2 Interactions
+        function toggleEntity(btn, name, isCorrect) {
+            if (btn.classList.contains('bg-indigo-600')) {
+                // Deselect
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('text-gray-600');
+                state.selectedEntities = state.selectedEntities.filter(e => e !== name);
+            } else {
+                // Select
+                btn.classList.remove('text-gray-600');
+                if (isCorrect) {
+                    btn.classList.add('bg-indigo-600', 'text-white');
+                    document.getElementById('entity-feedback').innerHTML = `<span class="text-green-600">Excellent! '${name}' is a core entity.</span>`;
+                    state.selectedEntities.push(name);
+                } else {
+                    btn.classList.add('bg-red-100', 'text-red-700', 'border-red-300');
+                    document.getElementById('entity-feedback').innerHTML = `<span class="text-red-600">Avoid '${name}'. It's likely an implementation detail or infrastructure.</span>`;
+                    setTimeout(() => {
+                        btn.classList.remove('bg-red-100', 'text-red-700', 'border-red-300');
+                        btn.classList.add('text-gray-600');
+                    }, 1500);
+                }
+            }
+            updateSchemaPreview();
+        }
+
+        function restoreEntities() {
+            // Re-apply visual state for selected entities would go here in a complex app
+            // For simplicity, we just clear and let them re-select or we could iterate state.selectedEntities
+            updateSchemaPreview();
+        }
+
+        function updateSchemaPreview() {
+            const preview = document.getElementById('schema-preview');
+            if (state.selectedEntities.length === 0) {
+                preview.innerHTML = '<div class="opacity-50 italic">Select entities above to generate schema...</div>';
+                return;
+            }
+
+            let schemaHtml = '';
+            state.selectedEntities.forEach(ent => {
+                if (ent === 'ParkingLot') {
+                    schemaHtml += `
+                        <div class="mb-2">
+                            <span class="text-blue-400">TABLE</span> ParkingLot (<br>
+                            &nbsp;&nbsp;id <span class="text-purple-400">INT PK</span>,<br>
+                            &nbsp;&nbsp;address <span class="text-purple-400">VARCHAR(255)</span><br>
+                            );
+                        </div>`;
+                } else if (ent === 'Vehicle') {
+                    schemaHtml += `
+                        <div class="mb-2">
+                            <span class="text-blue-400">TABLE</span> Vehicle (<br>
+                            &nbsp;&nbsp;license_plate <span class="text-purple-400">VARCHAR(20) PK</span>,<br>
+                            &nbsp;&nbsp;type <span class="text-purple-400">ENUM('CAR','TRUCK')</span><br>
+                            );
+                        </div>`;
+                } else if (ent === 'Ticket') {
+                    schemaHtml += `
+                        <div class="mb-2">
+                            <span class="text-blue-400">TABLE</span> Ticket (<br>
+                            &nbsp;&nbsp;id <span class="text-purple-400">INT PK</span>,<br>
+                            &nbsp;&nbsp;entry_time <span class="text-purple-400">TIMESTAMP</span>,<br>
+                            &nbsp;&nbsp;spot_id <span class="text-purple-400">INT FK</span>,<br>
+                            &nbsp;&nbsp;vehicle_id <span class="text-purple-400">VARCHAR FK</span><br>
+                            );
+                        </div>`;
+                } else if (ent === 'ParkingSpot') {
+                     schemaHtml += `
+                        <div class="mb-2">
+                            <span class="text-blue-400">TABLE</span> ParkingSpot (<br>
+                            &nbsp;&nbsp;id <span class="text-purple-400">INT PK</span>,<br>
+                            &nbsp;&nbsp;floor_id <span class="text-purple-400">INT FK</span>,<br>
+                            &nbsp;&nbsp;is_occupied <span class="text-purple-400">BOOLEAN</span><br>
+                            );
+                        </div>`;
+                }
+            });
+            preview.innerHTML = schemaHtml;
+        }
+
+        // Step 4 Interactions
+        const codeSnippets = {
+            none: `
+class ParkingSystem {
+    // Bad Design: Tight coupling, Hard to extend
+    calculatePrice(vehicleType, hours) {
+        if (vehicleType == "CAR") {
+            return hours * 20;
+        } else if (vehicleType == "TRUCK") {
+            return hours * 50;
+        } else if (vehicleType == "BIKE") {
+            return hours * 10;
+        }
+        // Changing prices requires modifying this class!
+        // Violates Open/Closed Principle.
+    }
+}`,
+            strategy: `
+// Strategy Pattern: Encapsulate algorithms
+interface PricingStrategy {
+    double calculate(int hours);
+}
+
+class HourlyStrategy implements PricingStrategy {
+    calculate(hours) { return hours * 20; }
+}
+
+class PremiumStrategy implements PricingStrategy {
+    calculate(hours) { return hours * 50; }
+}
+
+class Ticket {
+    PricingStrategy strategy; // Composed, flexible
+    
+    double getPrice(int hours) {
+        return strategy.calculate(hours);
+    }
+}`,
+            factory: `
+// Factory Pattern: Centralize Object Creation
+class VehicleFactory {
+    static Vehicle createVehicle(String type) {
+        switch(type) {
+            case "CAR": return new Car();
+            case "TRUCK": return new Truck();
+            default: throw new InvalidTypeException();
+        }
+    }
+}
+
+// Client Code
+Vehicle v = VehicleFactory.createVehicle("CAR");
+// We can add new vehicle types without breaking client code.`,
+            singleton: `
+// Singleton Pattern: Ensure one instance
+class ParkingLot {
+    private static ParkingLot instance = null;
+    
+    private ParkingLot() { 
+        // Private constructor 
+    }
+
+    public static ParkingLot getInstance() {
+        if (instance == null) {
+            // Thread-safe initialization would go here
+            instance = new ParkingLot();
+        }
+        return instance;
+    }
+}`
+        };
+
+        function applyPattern(pattern) {
+            const display = document.getElementById('code-display');
+            if(display) {
+                // Highlight button logic would go here
+                display.style.opacity = 0;
+                setTimeout(() => {
+                    display.innerText = codeSnippets[pattern];
+                    display.style.opacity = 1;
+                }, 200);
+            }
+        }
+
+        // Mobile Menu Toggle
+        document.getElementById('menuBtn').addEventListener('click', () => {
+            const sidebar = document.querySelector('aside');
+            sidebar.classList.toggle('hidden');
+            sidebar.classList.toggle('fixed');
+            sidebar.classList.toggle('z-50');
+            sidebar.classList.toggle('h-full');
+        });
+
+        // Initial Load
+        loadSection('intro');
+
+    </script>
+</body>
+</html>
