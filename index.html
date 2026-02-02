@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Design | Home</title>
+    <style>
+        /* --- Base Setup --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cascadia Code', 'Courier New', Courier, monospace;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background: #0d1017; 
+            color: #c0caf5;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: 260px;
+            background-color: #0f111a;
+            border-right: 1px solid #1f2335;
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            height: 100%;
+            z-index: 100; /* Ensures links are clickable */
+        }
+
+        .sidebar h2 {
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+            color: #ff5555;
+            text-transform: uppercase;
+        }
+
+        .sidebar a {
+            text-decoration: none;
+            color: #a9b1d6;
+            padding: 12px 10px;
+            margin: 4px 0;
+            font-size: 0.9rem;
+            display: block;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            background: #1a1b26;
+            color: #ffffff;
+            padding-left: 15px;
+        }
+
+        /* Only use .active for the page you are currently on */
+        .sidebar a.active {
+            color: #ffffff;
+            background: #34416d;
+            border-left: 3px solid #7aa2f7;
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            margin-left: 260px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            padding: 40px;
+        }
+
+        .terminal-window {
+            width: 100%;
+            max-width: 800px;
+            background: #1a1b26; 
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            border: 1px solid #292e42;
+        }
+
+        .terminal-header {
+            background: #24283b;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .window-label {
+            flex-grow: 1;
+            text-align: center;
+            color: #c0caf5;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .controls { display: flex; gap: 8px; }
+        .control { height: 12px; width: 12px; border-radius: 50%; }
+        .close { background: #f7768e; }
+        .min, .max { background: #444b6a; }
+
+        .terminal-body {
+            padding: 25px;
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        .prompt-user { color: #ff5555; font-weight: bold; }
+        .prompt-symbol { color: #7aa2f7; font-weight: bold; }
+
+        /* --- Typewriter Logic --- */
+        .type-line {
+            display: block;
+            position: relative;
+            white-space: nowrap;
+            overflow: hidden;
+            clip-path: inset(0 100% 0 0);
+            animation: reveal 2s steps(50) forwards;
+        }
+
+        #line-1 {
+            color: #ffffff;
+            font-size: 1.35rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            animation-delay: 0.5s;
+        }
+
+        #line-2 { animation-delay: 2.5s; }
+        #line-3 { animation-delay: 4.5s; }
+
+        .post-type-content {
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+            animation-delay: 6.5s;
+        }
+
+        .type-line::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 10px;
+            height: 100%;
+            background: #00ff41;
+            animation: blink 0.8s step-end infinite;
+        }
+
+        @keyframes reveal {
+            from { clip-path: inset(0 100% 0 0); }
+            to { clip-path: inset(0 0 0 0); }
+        }
+
+        @keyframes blink {
+            from, to { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar span, .sidebar h2 { display: none; }
+            .main-content { margin-left: 60px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <h2>System Design</h2>
+        <a href="index.html" class="active">Home</a> 
+        <a href="idempotency.html">Idempotency Key</a>
+        <a href="low_level_play.html">Low Level Approach</a>
+    </nav>
+
+    <div class="main-content">
+        <div class="terminal-window">
+            <div class="terminal-header">
+                <div class="window-label">guest@guest: ~</div>
+                <div class="controls">
+                    <div class="control min"></div>
+                    <div class="control max"></div>
+                    <div class="control close"></div>
+                </div>
+            </div>
+
+            <div class="terminal-body">
+                <div>
+                    <span class="prompt-user">guest@guest</span><span class="prompt-symbol">:~$</span> <span>./welcome.sh</span>
+                </div>
+                
+                <span id="line-1" class="type-line">Stop memorizing. Start building.</span>
+                <p id="line-2" class="type-line">We make system design concepts easy to understand.</p>
+                <p id="line-3" class="type-line">Content is purely generated using advanced LLMs.</p>
+
+                <div class="post-type-content">
+                    <p style="color: #565f89; font-size: 0.85rem; margin-top: 20px;"># Author: Fazil Khan</p>
+                    <div style="margin-top: 10px;">
+                        <span class="prompt-user">guest@guest</span><span class="prompt-symbol">:~$</span> <span style="color: #00ff41;">_</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
