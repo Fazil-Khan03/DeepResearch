@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Design | Terminal</title>
+    <title>System Design | Sequential Terminal</title>
     <style>
-        /* Base Setup */
+        /* --- Base Setup --- */
         * {
             margin: 0;
             padding: 0;
@@ -17,10 +17,10 @@
             display: flex;
             min-height: 100vh;
             background: #0d1017; 
-            color: #d1d1d1;
+            color: #c0caf5;
         }
 
-        /* Sidebar Styling */
+        /* --- Sidebar --- */
         .sidebar {
             width: 260px;
             background-color: #0f111a;
@@ -35,9 +35,8 @@
         .sidebar h2 {
             font-size: 0.9rem;
             margin-bottom: 25px;
-            color: #ff5555; /* Matching the red prompt color */
+            color: #ff5555;
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
         .sidebar a {
@@ -47,38 +46,33 @@
             margin: 2px 0;
             font-size: 0.9rem;
             display: block;
-            border-radius: 4px;
-            transition: 0.2s;
         }
 
-        .sidebar a:hover, .sidebar a.active {
+        .sidebar a.active {
             color: #ffffff;
             background: #1a1b26;
         }
 
-        /* Main Content Container */
+        /* --- Main Content --- */
         .main-content {
             margin-left: 260px;
             display: flex;
             justify-content: center;
             align-items: center;
             flex-grow: 1;
-            padding: 20px;
+            padding: 40px;
         }
 
-        /* The Terminal Window */
         .terminal-window {
             width: 95%;
-            max-width: 850px;
+            max-width: 800px;
             background: #1a1b26; 
             border-radius: 6px;
             overflow: hidden;
             box-shadow: 0 30px 60px rgba(0,0,0,0.5);
             border: 1px solid #292e42;
-            animation: float 6s ease-in-out infinite;
         }
 
-        /* Title Bar */
         .terminal-header {
             background: #24283b;
             padding: 10px 15px;
@@ -86,69 +80,91 @@
             align-items: center;
         }
 
-        .controls { display: flex; gap: 8px; order: 2; }
-        .control { height: 12px; width: 12px; border-radius: 50%; opacity: 0.8; }
-        .min { background: #444b6a; }
-        .max { background: #444b6a; }
-        .close { background: #f7768e; }
-
         .window-label {
             flex-grow: 1;
             text-align: center;
             color: #c0caf5;
             font-size: 0.85rem;
             font-weight: bold;
-            order: 1;
-            margin-left: 40px; /* Counter-balance the dots */
         }
 
-        /* Terminal Body */
+        .controls { display: flex; gap: 8px; }
+        .control { height: 12px; width: 12px; border-radius: 50%; }
+        .close { background: #f7768e; }
+        .min, .max { background: #444b6a; }
+
+        /* --- Terminal Body --- */
         .terminal-body {
             padding: 25px;
-            min-height: 320px;
-            font-size: 1rem;
+            font-size: 1.05rem;
             line-height: 1.6;
         }
 
-        /* Prompt Colors from Screenshot */
-        .prompt-user { color: #ff5555; font-weight: bold; } /* guest@guest in red */
-        .prompt-symbol { color: #7aa2f7; font-weight: bold; } /* :~$ in blue */
-        .output-text { color: #c0caf5; }
+        .prompt-user { color: #ff5555; font-weight: bold; }
+        .prompt-symbol { color: #7aa2f7; font-weight: bold; }
 
-        .header-text {
+        /* --- Line-by-Line Typewriter Logic --- */
+        .type-line {
+            display: block;
+            position: relative;
+            white-space: nowrap;
+            overflow: hidden;
+            clip-path: inset(0 100% 0 0); /* Hidden by default */
+            animation: reveal 2s steps(50) forwards;
+        }
+
+        /* Line 1: Header */
+        #line-1 {
             color: #ffffff;
             font-size: 1.35rem;
-            margin: 20px 0 10px 0;
-            display: block;
             font-weight: bold;
+            margin-bottom: 10px;
+            animation-delay: 0.5s;
         }
 
-        /* The Typing Effect */
-        .typewriter-content {
-            color: #c0caf5;
-            display: inline-block;
-            width: 0;
-            overflow: hidden;
-            white-space: normal;
-            border-right: 10px solid #00ff41; /* Green block cursor for contrast */
-            animation: 
-                typing 5s steps(100, end) forwards,
-                blink 0.8s step-end infinite;
+        /* Line 2: Main explanation part 1 */
+        #line-2 {
+            animation-delay: 2.5s; /* Starts after line 1 */
         }
 
-        .author-line {
-            margin-top: 30px;
-            color: #565f89;
-            font-size: 0.85rem;
+        /* Line 3: Main explanation part 2 */
+        #line-3 {
+            animation-delay: 4.5s; /* Starts after line 2 */
+        }
+
+        /* The Author & Prompt fade-in after everything finishes */
+        .post-type-content {
             opacity: 0;
-            animation: fadeIn 1s forwards 5.5s;
+            animation: fadeIn 0.5s forwards;
+            animation-delay: 6.5s;
         }
 
-        /* Animations */
-        @keyframes typing { from { width: 0 } to { width: 100% } }
-        @keyframes blink { from, to { border-color: transparent } 50% { border-color: #00ff41 } }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        @keyframes fadeIn { to { opacity: 1; } }
+        /* Cursor effect for the currently typing line */
+        .type-line::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 10px;
+            height: 100%;
+            background: #00ff41;
+            animation: blink 0.8s step-end infinite;
+        }
+
+        /* Keyframes */
+        @keyframes reveal {
+            from { clip-path: inset(0 100% 0 0); }
+            to { clip-path: inset(0 0 0 0); }
+        }
+
+        @keyframes blink {
+            from, to { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
 
         @media (max-width: 768px) {
             .sidebar { width: 60px; }
@@ -161,9 +177,10 @@
 
     <nav class="sidebar">
         <h2>System Design</h2>
-        <a href="idempotency.html" class="active"><span>Idempotency</span></a>
-        <a href="low_level_play.html"><span>Low Level Approach</span></a>
-  
+        <a href="#" class="active"><span>Idempotency</span></a>
+        <a href="#"><span>Low Level</span></a>
+        <a href="#"><span>Architecture</span></a>
+        <a href="#"><span>Case Studies</span></a>
     </nav>
 
     <div class="main-content">
@@ -179,19 +196,15 @@
 
             <div class="terminal-body">
                 <div>
-                    <span class="prompt-user">guest@</span><span class="prompt-symbol">:~$</span> <span class="output-text">./explore_design.sh</span>
+                    <span class="prompt-user">guest@guest</span><span class="prompt-symbol">:~$</span> <span>./execute_intro.sh</span>
                 </div>
                 
-                <span class="header-text">Stop memorizing, start building.</span>
-                
-                <p class="typewriter-content">
-                    We’re breaking down the blueprints of the modern web. System Design concepts made easy using LLM—featuring real-world applications and an interactive learning panel.
-                </p>
-
-                <p class="author-line"># Author: Fazil Khan</p>
-                
-                <div style="margin-top: 10px;">
-                    <span class="prompt-user">guest@</span><span class="prompt-symbol">:~$</span> <span class="output-text">_</span>
+               <span id="line-1" class="type-line">Stop memorizing. Start building.</span>
+               <p id="line-2" class="type-line">We make system design concepts easy to understand.</p>
+              <p id="line-3" class="type-line">Content is generated using advanced LLMs and includes real-world case studies..</p>
+                <div class="post-type-content">
+                    <p style="color: #565f89; font-size: 0.85rem; margin-top: 20px;"># Author: Fazil Khan</p>
+              
                 </div>
             </div>
         </div>
